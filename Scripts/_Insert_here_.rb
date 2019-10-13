@@ -22,3 +22,58 @@
 
 
 =end
+
+class QWindow < Window
+
+def initialize(x, y, width, height)
+super
+
+filename = "Window"
+path = "Graphics/System/" + filename
+bmp = Bitmap.new(width, height)
+
+self.windowskin = Bitmap.new(path)
+self.contents = bmp
+self.arrows_visible = false
+end
+
+def draw_text(*args)
+self.contents.draw_text(*args)
+end
+
+def display_text(text)
+draw_text(0,-10,width, height, text)
+end
+
+end
+
+class QDebug
+
+def initialize
+@windows = []
+
+x = 0
+y = Graphics.height - 48
+height = 45
+width = Graphics.width
+
+@windows.push( QWindow.new(x, y, width/2, height) )
+@windows.push( QWindow.new(x+width/2, y, width/2, height) )
+end
+
+def refresh(index, string)
+@windows[index].contents.clear
+@windows[index].display_text(string)
+end
+
+def update(param1, param2)
+update_info(@windows[0], param1)
+update_info(@windows[1], param2)
+end
+
+def update_info(obj, param)
+obj.contents.clear
+obj.display_text(param)
+end
+
+end
