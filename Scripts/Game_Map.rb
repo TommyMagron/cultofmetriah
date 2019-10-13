@@ -436,11 +436,8 @@ class Game_Map
   #     bit:  Inhibit passage check bit
   #--------------------------------------------------------------------------
   def check_passage(x, y, bit)
-    @debug = QDebug.new
-    @debug.refresh(0, bit)
     all_tiles(x, y).each do |tile_id|
       flag = tileset.flags[tile_id]
-      @debug.refresh(1, flag)
       next if flag & 0x10 != 0            # [☆]: No effect on passage
       return true  if flag & bit == 0     # [○] : Passable
       return false if flag & bit == bit   # [×] : Impassable
