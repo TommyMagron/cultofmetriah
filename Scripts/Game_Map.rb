@@ -283,12 +283,14 @@ class Game_Map
   end
   #--------------------------------------------------------------------------
   # * Calculate X Coordinate After Loop Adjustment
+  # * @TODO a modifier pour vue isometrique
   #--------------------------------------------------------------------------
   def round_x(x)
     loop_horizontal? ? (x + width) % width : x
   end
   #--------------------------------------------------------------------------
   # * Calculate Y Coordinate After Loop Adjustment
+  # * @TODO a modifier pour vue isometrique
   #--------------------------------------------------------------------------
   def round_y(y)
     loop_vertical? ? (y + height) % height : y

@@ -90,8 +90,8 @@ class Sprite_Character < Sprite_Base
       @cw = bitmap.width / 3
       @ch = bitmap.height / 4
     else
-      @cw = bitmap.width / 12
-      @ch = bitmap.height / 8
+      @cw = bitmap.width / 7
+      @ch = bitmap.height / 2
     end
     self.ox = @cw / 2
     self.oy = @ch

@@ -97,7 +97,7 @@ module Cache
   # * Create Empty Bitmap
   #--------------------------------------------------------------------------
   def self.empty_bitmap
-    Bitmap.new(32, 32)
+    Bitmap.new(64, 32)
   end
   #--------------------------------------------------------------------------
   # * Create/Get Normal Bitmap

@@ -172,6 +172,7 @@ class Game_Player < Game_Character
   end
   #--------------------------------------------------------------------------
   # * Move to Designated Position
+  # @TODO Modified for isometric
   #--------------------------------------------------------------------------
   def moveto(x, y)
     super
