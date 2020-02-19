@@ -35,9 +35,6 @@ class Sprite_Character < Sprite_Base
   # * Update Position
   #--------------------------------------------------------------------------
   def update_position
-    @debug = QDebug.new
-    @debug.refresh(0, @character.screen_y)
-    @debug.refresh(1, y)
     screenXToIso = @character.screen_x - @character.screen_y
     screenYToIso = (@character.screen_x + @character.screen_y) / 2;
     move_animation(screenXToIso - x,  - screenYToIso - y)
