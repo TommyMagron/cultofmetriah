@@ -215,7 +215,6 @@ class Game_CharacterBase
   end
   #--------------------------------------------------------------------------
   # * Move to Designated Position
-  # @TODO Modifier pour la vue isometrique
   #--------------------------------------------------------------------------
   def moveto(x, y)
     @x = x % $game_map.width

@@ -1,6 +1,13 @@
 
-
 class Sprite_Character < Sprite_Base
+
+  def initialize(viewport, character = nil)
+    super(viewport)
+    @character = character
+    @balloon_duration = 0
+    update
+  end
+
   #--------------------------------------------------------------------------
   # * Set Character Bitmap
   #--------------------------------------------------------------------------
@@ -14,7 +21,7 @@ class Sprite_Character < Sprite_Base
       @cw = bitmap.width / 8
       @ch = bitmap.height / 4
     end
-    self.ox = @cw
+    self.ox = @cw / 2
     self.oy = @ch
   end
 
@@ -30,33 +37,118 @@ class Sprite_Character < Sprite_Base
       self.src_rect.set(sx, sy, @cw, @ch)
     end
   end
-
-  #--------------------------------------------------------------------------
-  # * Update Position
-  #--------------------------------------------------------------------------
-  def update_position
-    screenXToIso = @character.screen_x - @character.screen_y
-    screenYToIso = (@character.screen_x + @character.screen_y) / 2;
-    move_animation(screenXToIso - x,  - screenYToIso - y)
-    self.x = screenXToIso
-    self.y = screenYToIso
-    self.z = @character.screen_z
-  end
 end
 
-#class Spriteset_Map
+class Spriteset_Map
   #--------------------------------------------------------------------------
   # * Update Tilemap
   #--------------------------------------------------------------------------
-#  def update_tilemap
-#    @tilemap.map_data = $game_map.data
-#    @tilemap.ox = $game_map.display_x * 64
-#    @tilemap.oy = $game_map.display_y * 32
-#    @tilemap.update
-#  end
-#end
+  def update_tilemap
+    @tilemap.map_data = $game_map.data
+    @tilemap.ox = $game_map.display_x * 128
+    @tilemap.oy = $game_map.display_y * 64
+    @tilemap.update
+  end
+
+  #--------------------------------------------------------------------------
+  # * Update Weather
+  #--------------------------------------------------------------------------
+  def update_weather
+    @weather.type = $game_map.screen.weather_type
+    @weather.power = $game_map.screen.weather_power
+    @weather.ox = $game_map.display_x * 128
+    @weather.oy = $game_map.display_y * 64
+    @weather.update
+  end
+end
+
+class Game_CharacterBase
+  
+
+  TILE_WIDTH_HALF = 64
+  TILE_HEIGHT_HALF = 32
+  ADJUST_ORIGIN_SCREEN_Y_COORDINATES = 96
+
+  #--------------------------------------------------------------------------
+  # * Initialize Public Member Variables
+  #--------------------------------------------------------------------------
+  def init_public_members
+    @id = 0
+    @x = 0
+    @y = 0
+    @real_x = 0
+    @real_y = 0
+    @tile_id = 0
+    @character_name = ""
+    @character_index = 0
+    @move_speed = 4
+    @move_frequency = 6
+    @walk_anime = true
+    @step_anime = false
+    @direction_fix = false
+    @opacity = 255
+    @blend_type = 0
+    @direction = 6
+    @pattern = 1
+    @priority_type = 1
+    @through = false
+    @bush_depth = 0
+    @animation_id = 0
+    @balloon_id = 0
+    @transparent = false
+  end
+  #--------------------------------------------------------------------------
+  # * Get Number of Pixels to Shift Up from Tile Position
+  #--------------------------------------------------------------------------
+  def shift_y
+    object_character? ? 0 : 8
+  end
+  #--------------------------------------------------------------------------
+  # * Get Screen X-Coordinates
+  #--------------------------------------------------------------------------
+  def screen_x
+    xCoordinate = $game_map.adjust_x(@real_x)
+    yCoordinate = $game_map.adjust_y(@real_y)
+    ((xCoordinate - yCoordinate) * TILE_WIDTH_HALF) + (Graphics.width / 2 - TILE_WIDTH_HALF)
+  end
+  #--------------------------------------------------------------------------
+  # * Get Screen Y-Coordinates
+  #--------------------------------------------------------------------------
+  def screen_y
+    xCoordinate = $game_map.adjust_x(@real_x)
+    yCoordinate = $game_map.adjust_y(@real_y)
+    ((xCoordinate + yCoordinate) * TILE_HEIGHT_HALF  + ADJUST_ORIGIN_SCREEN_Y_COORDINATES) - shift_y - jump_height
+  end
+
+  #--------------------------------------------------------------------------
+  # * Get Move Speed (Account for Dash)
+  #--------------------------------------------------------------------------
+  def real_move_speed
+    @move_speed + (dash? ? 1 : 0)
+  end
+
+  #--------------------------------------------------------------------------
+  # * Calculate Move Distance per Frame
+  #--------------------------------------------------------------------------
+  def distance_per_frame
+    2 ** real_move_speed / 256.0
+  end
+end
 
 class Game_Map
+
+#--------------------------------------------------------------------------
+  # * Number of Horizontal Tiles on Screen
+  #--------------------------------------------------------------------------
+  def screen_tile_x
+    Graphics.width / 128
+  end
+  #--------------------------------------------------------------------------
+  # * Number of Vertical Tiles on Screen
+  #--------------------------------------------------------------------------
+  def screen_tile_y
+    Graphics.height / 64
+  end
 
   #--------------------------------------------------------------------------
   # * Scroll Down
@@ -152,4 +244,18 @@ class Game_Map
       @parallax_y += @display_y - last_y
     end
   end
+end
+
+class Game_Player < Game_Character
+
+  def center_x
+    ($game_map.screen_tile_x / 128 - 1) / 2.0
+  end
+  #--------------------------------------------------------------------------
+  # * Y Coordinate of Screen Center
+  #--------------------------------------------------------------------------
+  def center_y
+    ($game_map.screen_tile_y / 64 - 1) / 2.0
+  end
+
 end
