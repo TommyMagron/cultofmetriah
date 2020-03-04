@@ -168,8 +168,6 @@ class Game_CharacterBase
   #     turn_ok : Allows change of direction on the spot
   #--------------------------------------------------------------------------
   def move_straight(d, turn_ok = true)
-    #@debug.refresh(0, @x)
-    #@debug.refresh(1, @y)
     @move_succeed = passable?(@x, @y, d)
     if @move_succeed
       set_direction(d)
@@ -212,7 +210,7 @@ class Game_Map
   # * Number of Vertical Tiles on Screen
   #--------------------------------------------------------------------------
   def screen_tile_y
-    Graphics.height / 32
+    Graphics.width / 64
   end
 
   #--------------------------------------------------------------------------
@@ -252,44 +250,6 @@ class Game_Map
   end
 
   #--------------------------------------------------------------------------
-  # * Calculate X Coordinate, Minus Display Coordinate
-  #--------------------------------------------------------------------------
-  def adjust_x(x)
-    if loop_horizontal? && x < @display_x - (width - screen_tile_x) / 2
-      x - @display_x + @map.width
-    else
-      #@debug.refresh(0,  x - @display_x)
-      x - @display_x
-    end
-  end
-  #--------------------------------------------------------------------------
-  # * Calculate Y Coordinate, Minus Display Coordinate
-  #--------------------------------------------------------------------------
-  def adjust_y(y)
-    if loop_vertical? && y < @display_y - (height - screen_tile_y) / 2
-      y - @display_y + @map.height
-    else
-      #@debug.refresh(1, @display_y) # @display_y vaut -3 ??
-      y - @display_y
-    end
-  end
-
-  #--------------------------------------------------------------------------
-  # * Calculate X Coordinate After Loop Adjustment
-  # * @TODO a modifier pour vue isometrique
-  #--------------------------------------------------------------------------
-  def round_x(x)
-    loop_horizontal? ? (x + width) % width : x
-  end
-  #--------------------------------------------------------------------------
-  # * Calculate Y Coordinate After Loop Adjustment
-  # * @TODO a modifier pour vue isometrique
-  #--------------------------------------------------------------------------
-  def round_y(y)
-    loop_vertical? ? (y + height) % height : y
-  end
-
-  #--------------------------------------------------------------------------
   # * Scroll Down
   #--------------------------------------------------------------------------
   def scroll_down(distance)
@@ -302,7 +262,6 @@ class Game_Map
       @display_y = [@display_y + distance, height - screen_tile_y].min
       @parallax_y += @display_y - last_y
     end
-
     if loop_horizontal?
       @display_x += @map.width - distance
       @display_x %= @map.width 
@@ -333,7 +292,7 @@ class Game_Map
       @parallax_y -= distance if @parallax_loop_y
     else
       last_y = @display_y
-      @display_y = [@display_y - distance, 0].max
+      #@display_y = [@display_y - distance, 0].max
       @parallax_y += @display_y - last_y
     end
   end
@@ -356,7 +315,7 @@ class Game_Map
       @parallax_y += distance if @parallax_loop_y
     else
       last_y = @display_y
-      @display_y = [@display_y + distance, height - screen_tile_y].min
+      #@display_y = [@display_y + distance, height - screen_tile_y].min
       @parallax_y += @display_y - last_y
     end
   end
@@ -379,7 +338,7 @@ class Game_Map
       @parallax_y -= distance if @parallax_loop_y
     else
       last_y = @display_y
-      @display_y = [@display_y - distance, 0].max
+      #@display_y = [@display_y - distance, 0].max
       @parallax_y += @display_y - last_y
     end
   end
@@ -389,7 +348,7 @@ class Game_Player < Game_Character
 
   def initialize
     super
-    @debug = QDebug.new
+    #@debug = QDebug.new
     @vehicle_type = :walk           # Type of vehicle currently being ridden
     @vehicle_getting_on = false     # Boarding vehicle flag
     @vehicle_getting_off = false    # Getting off vehicle flag
@@ -401,7 +360,7 @@ class Game_Player < Game_Character
   def center_x
     (Graphics.width / 64 - 1) / 2.0
   end
-  
+
   #--------------------------------------------------------------------------
   # * Y Coordinate of Screen Center
   #--------------------------------------------------------------------------
@@ -413,11 +372,6 @@ class Game_Player < Game_Character
   # * Set Map Display Position to Center of Screen
   #--------------------------------------------------------------------------
   def center(x, y)
-    @debug.refresh(0,  center_x)
-    @debug.refresh(1,  center_y)
     $game_map.set_display_pos(x - center_x, y - center_y)
   end
-
-
-
 end
