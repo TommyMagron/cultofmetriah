@@ -1,13 +1,17 @@
-TILE_WIDTH_HALF = 32
-TILE_HEIGHT_HALF = 16
-ADJUST_HEIGHT_MAP_START = 96
+TILE_WIDTH = 128
+TILE_HEIGHT = 64
+
+TILE_WIDTH_HALF = TILE_WIDTH / 2
+TILE_HEIGHT_HALF = TILE_HEIGHT / 2
+
+SPACE_BETWEEN_PATTERN_SPRITE_PX = 12
 
 class Sprite_Character < Sprite_Base
 
   def initialize(viewport, character = nil)
     super(viewport)
     #@debug = QDebug.new
-    #@losange = Bitmap.new("Graphics/Pictures/losange_64_32.png")
+    #@losange = Bitmap.new("Graphics/Pictures/losange_128_64.png")
     #@spriteLosange = Sprite.new
     #@spriteLosange.bitmap = @losange
     @character = character
@@ -49,7 +53,7 @@ class Sprite_Character < Sprite_Base
 
   def update_position
     #@spriteLosange.x = ((0 - 0) * TILE_WIDTH_HALF) + Graphics.width / 2 - TILE_WIDTH_HALF
-    #@spriteLosange.y = ((0 + 0) * TILE_HEIGHT_HALF) + 64
+    #@spriteLosange.y = ((0 + 0) * TILE_HEIGHT_HALF)
     move_animation(@character.screen_x - x, @character.screen_y - y)
     self.x = @character.screen_x
     self.y = @character.screen_y
@@ -77,8 +81,8 @@ class Spriteset_Map
   #--------------------------------------------------------------------------
   def update_tilemap
     @tilemap.map_data = $game_map.data
-    @tilemap.ox = ($game_map.display_x * 64) / 2
-    @tilemap.oy = ($game_map.display_y * 32) / 2
+    @tilemap.ox = ($game_map.display_x * TILE_WIDTH) / 2
+    @tilemap.oy = ($game_map.display_y * TILE_HEIGHT) / 2
     @tilemap.update
   end
 
@@ -88,8 +92,8 @@ class Spriteset_Map
   def update_weather
     @weather.type = $game_map.screen.weather_type
     @weather.power = $game_map.screen.weather_power
-    @weather.ox = $game_map.display_x * 64
-    @weather.oy = $game_map.display_y * 32
+    @weather.ox = $game_map.display_x * TILE_WIDTH
+    @weather.oy = $game_map.display_y * TILE_HEIGHT
     @weather.update
   end
 end
@@ -129,7 +133,7 @@ class Game_CharacterBase
   # * Get Number of Pixels to Shift Up from Tile Position
   #--------------------------------------------------------------------------
   def shift_y
-    object_character? ? 0 : 10
+    object_character? ? 0 : TILE_HEIGHT_HALF - SPACE_BETWEEN_PATTERN_SPRITE_PX
   end
   #--------------------------------------------------------------------------
   # * Get Screen X-Coordinates
@@ -145,7 +149,7 @@ class Game_CharacterBase
   def screen_y
     xCoordinate = $game_map.adjust_x(@real_x)
     yCoordinate = $game_map.adjust_y(@real_y)
-    ((xCoordinate + yCoordinate) * TILE_HEIGHT_HALF) + ADJUST_HEIGHT_MAP_START - shift_y - jump_height
+    ((xCoordinate + yCoordinate) * TILE_HEIGHT_HALF) - shift_y - jump_height
   end
 
   #--------------------------------------------------------------------------
@@ -204,13 +208,13 @@ class Game_Map
   # * Number of Horizontal Tiles on Screen
   #--------------------------------------------------------------------------
   def screen_tile_x
-    Graphics.width / 64
+    Graphics.width / TILE_WIDTH
   end
   #--------------------------------------------------------------------------
   # * Number of Vertical Tiles on Screen
   #--------------------------------------------------------------------------
   def screen_tile_y
-    Graphics.width / 64
+    Graphics.width / TILE_HEIGHT
   end
 
   #--------------------------------------------------------------------------
@@ -229,11 +233,11 @@ class Game_Map
   #--------------------------------------------------------------------------
   def parallax_ox(bitmap)
     if @parallax_loop_x
-      @parallax_x * 32
+      @parallax_x * TILE_WIDTH_HALF
     else
       w1 = [bitmap.width - Graphics.width, 0].max
-      w2 = [width * 64 - Graphics.width, 1].max
-      @parallax_x * 32 * w1 / w2
+      w2 = [width * TILE_WIDTH - Graphics.width, 1].max
+      @parallax_x * TILE_WIDTH_HALF * w1 / w2
     end
   end
   #--------------------------------------------------------------------------
@@ -241,11 +245,11 @@ class Game_Map
   #--------------------------------------------------------------------------
   def parallax_oy(bitmap)
     if @parallax_loop_y
-      @parallax_y * 16
+      @parallax_y * TILE_HEIGHT_HALF
     else
       h1 = [bitmap.height - Graphics.height, 0].max
-      h2 = [height * 32 - Graphics.height, 1].max
-      @parallax_y * 16 * h1 / h2
+      h2 = [height * TILE_HEIGHT_HALF - Graphics.height, 1].max
+      @parallax_y * TILE_HEIGHT_HALF * h1 / h2
     end
   end
 
@@ -292,7 +296,7 @@ class Game_Map
       @parallax_y -= distance if @parallax_loop_y
     else
       last_y = @display_y
-      #@display_y = [@display_y - distance, 0].max
+      @display_y = [@display_y - distance, 0].max
       @parallax_y += @display_y - last_y
     end
   end
@@ -315,7 +319,7 @@ class Game_Map
       @parallax_y += distance if @parallax_loop_y
     else
       last_y = @display_y
-      #@display_y = [@display_y + distance, height - screen_tile_y].min
+      @display_y = [@display_y + distance, height - screen_tile_y].min
       @parallax_y += @display_y - last_y
     end
   end
@@ -338,7 +342,7 @@ class Game_Map
       @parallax_y -= distance if @parallax_loop_y
     else
       last_y = @display_y
-      #@display_y = [@display_y - distance, 0].max
+      @display_y = [@display_y - distance, 0].max
       @parallax_y += @display_y - last_y
     end
   end
@@ -358,14 +362,14 @@ class Game_Player < Game_Character
   end
 
   def center_x
-    (Graphics.width / 64 - 1) / 2.0
+    (Graphics.width / TILE_WIDTH_HALF - 1) / 2.0
   end
 
   #--------------------------------------------------------------------------
   # * Y Coordinate of Screen Center
   #--------------------------------------------------------------------------
   def center_y
-    (Graphics.height / 32 - 1) / 2.0
+    (Graphics.height / TILE_HEIGHT_HALF - 1) / 2.0
   end
 
   #--------------------------------------------------------------------------
