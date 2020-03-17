@@ -57,6 +57,8 @@ y = Graphics.height - 48
 height = 45
 width = Graphics.width
 
+@windows.push( QWindow.new(0, 0, width/2, height) )
+@windows.push( QWindow.new(x+width/2, 0, width/2, height) )
 @windows.push( QWindow.new(x, y, width/2, height) )
 @windows.push( QWindow.new(x+width/2, y, width/2, height) )
 end
@@ -69,6 +71,8 @@ end
 def update(param1, param2)
 update_info(@windows[0], param1)
 update_info(@windows[1], param2)
+update_info(@windows[2], param1)
+update_info(@windows[3], param2)
 end
 
 def update_info(obj, param)

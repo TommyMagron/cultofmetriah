@@ -596,10 +596,14 @@ class Game_Map
   #--------------------------------------------------------------------------
   def do_scroll(direction, distance)
     case direction
-    when 2;  scroll_down (distance)
-    when 4;  scroll_left (distance)
-    when 6;  scroll_right(distance)
-    when 8;  scroll_up   (distance)
+    when 2  
+      scroll_down (distance)  
+    when 4  
+      scroll_left (distance)  
+    when 6  
+      scroll_right(distance) 
+    when 8  
+      scroll_up   (distance)  
     end
   end
   #--------------------------------------------------------------------------
