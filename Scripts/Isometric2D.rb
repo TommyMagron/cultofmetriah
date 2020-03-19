@@ -46,16 +46,6 @@ class Sprite_Character < Sprite_Base
       self.src_rect.set(sx, sy, @cw, @ch)
     end
   end
-
-  #--------------------------------------------------------------------------
-  # * Update Position
-  #--------------------------------------------------------------------------
-  def update_position
-    move_animation(@character.screen_x - x, @character.screen_y - y)
-    self.x = @character.screen_x
-    self.y = @character.screen_y
-    self.z = @character.screen_z
-  end
 end
 
 class Game_CharacterBase
@@ -96,13 +86,13 @@ class Game_CharacterBase
   # * Get Screen X-Coordinates
   #--------------------------------------------------------------------------
   def screen_x
-    $game_map.calculate_screen_x(@real_x - @real_y)
+    $game_map.calculate_screen_x(@real_x - @real_y) + TILE_WIDTH_HALF
   end
   #--------------------------------------------------------------------------
   # * Get Screen Y-Coordinates
   #--------------------------------------------------------------------------
   def screen_y
-     $game_map.calculate_screen_y(@real_x + @real_y) - SPACE_BETWEEN_CHARACTERN_PATTERN - jump_height
+     $game_map.calculate_screen_y(@real_x + @real_y) + TILE_HEIGHT_HALF - SPACE_BETWEEN_CHARACTERN_PATTERN - jump_height
   end
 
   #--------------------------------------------------------------------------
@@ -165,7 +155,6 @@ end
 
 class Game_Map
 
-  attr_reader :cartesian_display_x, :cartesian_display_y
   #--------------------------------------------------------------------------
   # * Object Initialization
   #--------------------------------------------------------------------------
@@ -190,41 +179,35 @@ class Game_Map
   def screen_tile_x
     Graphics.width / TILE_WIDTH_HALF
   end
+
   #--------------------------------------------------------------------------
   # * Number of Vertical Tiles on Screen
   # In isometric view, double of tiles visible on screen
   #--------------------------------------------------------------------------
   def screen_tile_y
-    Graphics.height / TILE_HEIGHT
+    Graphics.height / TILE_HEIGHT_HALF
   end
+
   #--------------------------------------------------------------------------
   # * Calculate X Coordinate of Parallax Display Origin
   #--------------------------------------------------------------------------
   def parallax_ox(bitmap)
-    if @parallax_loop_x
-      @parallax_x * TILE_WIDTH
-    else
       w1 = [bitmap.width - Graphics.width, 0].max
-      w2 = [width * TILE_WIDTH - Graphics.width, 1].max
-      @parallax_x * TILE_WIDTH_HALF * w1 / w2
-    end
+      w2 = [width * TILE_WIDTH_HALF - Graphics.width, 1].max
+      (@parallax_x -  @parallax_y) * TILE_WIDTH_HALF
   end
+
   #--------------------------------------------------------------------------
   # * Calculate Y Coordinate of Parallax Display Origin
   #--------------------------------------------------------------------------
   def parallax_oy(bitmap)
-    if @parallax_loop_y
-      @parallax_y * TILE_HEIGHT
-    else
       h1 = [bitmap.height - Graphics.height, 0].max
-      h2 = [height * TILE_HEIGHT - Graphics.height, 1].max
-      @parallax_y * TILE_HEIGHT_HALF * h1 / h2
-    end
+      h2 = [height * TILE_HEIGHT_HALF - Graphics.height, 1].max
+      (@parallax_x + @parallax_y) * TILE_HEIGHT_HALF
   end
 
   #--------------------------------------------------------------------------
   # * Calculate X Coordinate, Minus Display Coordinate
-  # Adjust the x value between display x and hero x, because certain case camera will stay on 0 and not negative value
   #--------------------------------------------------------------------------
   def adjust_x(x)
       x - @display_x
@@ -240,21 +223,13 @@ class Game_Map
   # * Calculate Screen X Coordinate, Minus Display Coordinate
   #--------------------------------------------------------------------------
   def calculate_screen_x(x)
-    if @display_x == 0 || @display_x == width - screen_tile_x
-      x * TILE_WIDTH_HALF
-    else
-      x  * TILE_WIDTH_HALF - @display_screen_x
-    end
+      x * TILE_WIDTH_HALF - @display_screen_x
   end
   #--------------------------------------------------------------------------
   # * Calculate Y Coordinate, Minus Display Coordinate
   #--------------------------------------------------------------------------
   def calculate_screen_y(y)
-    if @display_y == 0 || @display_y == height - screen_tile_y
-      y * TILE_HEIGHT_HALF
-    else
       y * TILE_HEIGHT_HALF - @display_screen_y
-    end
   end
 
   def get_display_screen_x
@@ -275,11 +250,10 @@ class Game_Map
 
   #--------------------------------------------------------------------------
   # * Set Display Position
-  # *2 for tile width adjustment (base 32px)
   #--------------------------------------------------------------------------
   def set_display_pos(x, y)
-    x = [0, [x, width - screen_tile_x].min].max
-    y = [0, [y, height - screen_tile_y].min].max
+    x = [x, width - screen_tile_x].min
+    y = [y, height - screen_tile_y].min
     @display_x = x
     @display_y = y
     @parallax_x = x
@@ -423,14 +397,14 @@ class Game_Player < Game_Character
   # * X Coordinate of Screen Center
   #--------------------------------------------------------------------------
   def center_x
-    (Graphics.width / TILE_WIDTH_HALF ) / 2
+    (Graphics.width / TILE_WIDTH_HALF - 1) / 2.0
   end
 
   #--------------------------------------------------------------------------
   # * Y Coordinate of Screen Center
   #--------------------------------------------------------------------------
   def center_y
-    (Graphics.height / TILE_HEIGHT) / 2
+    (Graphics.height / TILE_HEIGHT_HALF - 1) / 2.0
   end
 
   #--------------------------------------------------------------------------
@@ -440,15 +414,20 @@ class Game_Player < Game_Character
     hero_screen_x = (x - y) * TILE_WIDTH_HALF
     hero_screen_y = (x + y) * TILE_HEIGHT_HALF
 
-    $game_map.set_display_screen_x(hero_screen_x - (Graphics.width / 2))
-    $game_map.set_display_screen_y(hero_screen_y - (Graphics.height / 2))
+    distance_between_center_x_and_hero_screen_pos_x =  hero_screen_x - (Graphics.width / 2 - TILE_WIDTH_HALF) 
+    distance_between_center_y_and_hero_screen_pos_y =  hero_screen_y - (Graphics.height / 2 - TILE_HEIGHT_HALF) 
 
-    adjust_x_tile = $game_map.get_display_screen_x < 0 ? 0 : $game_map.get_display_screen_x
-    adjust_y_tile = $game_map.get_display_screen_y < 0 ? 0 : $game_map.get_display_screen_y
+    $game_map.set_display_screen_x(
+      [[distance_between_center_x_and_hero_screen_pos_x, ($game_map.width - $game_map.screen_tile_x) * TILE_WIDTH_HALF].min, 0].max
+    )
 
-    tile_display_x = (adjust_x_tile / TILE_WIDTH_HALF + (adjust_y_tile / TILE_HEIGHT_HALF)) / 2
-    tile_display_y = (adjust_y_tile / TILE_HEIGHT_HALF - (adjust_x_tile / TILE_WIDTH_HALF)) / 2
+    $game_map.set_display_screen_y(
+      [[distance_between_center_y_and_hero_screen_pos_y, ($game_map.height - $game_map.screen_tile_y) * TILE_HEIGHT_HALF].min, 0].max
+    )
 
-    $game_map.set_display_pos(tile_display_x * 2, tile_display_y * 2)
+    tile_display_x = ($game_map.get_display_screen_x / TILE_WIDTH_HALF + $game_map.get_display_screen_y / TILE_HEIGHT_HALF) / 2.0
+    tile_display_y = ($game_map.get_display_screen_y / TILE_HEIGHT_HALF - ($game_map.get_display_screen_x / TILE_WIDTH_HALF)) / 2.0
+
+    $game_map.set_display_pos(tile_display_x, tile_display_y)
   end
 end
