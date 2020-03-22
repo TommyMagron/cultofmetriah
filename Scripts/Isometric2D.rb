@@ -4,6 +4,8 @@ TILE_HEIGHT = 64
 TILE_WIDTH_HALF = TILE_WIDTH / 2
 TILE_HEIGHT_HALF = TILE_HEIGHT / 2
 
+SPACE_BETWEEN_ORIGIN_TILEMAP_AND_SCREEN_TOP_BORDER = TILE_HEIGHT
+
 class Sprite_Character < Sprite_Base
 
   def initialize(viewport, character = nil)
@@ -50,7 +52,7 @@ end
 
 class Game_CharacterBase
 
-  SPACE_BETWEEN_CHARACTERN_PATTERN = -12
+  SPACE_BETWEEN_CHARACTERN_PATTERN = 12
 
   #--------------------------------------------------------------------------
   # * Initialize Public Member Variables
@@ -86,13 +88,13 @@ class Game_CharacterBase
   # * Get Screen X-Coordinates
   #--------------------------------------------------------------------------
   def screen_x
-    $game_map.calculate_screen_x(@real_x - @real_y) + TILE_WIDTH_HALF
+    ($game_map.adjust_x(@real_x) - $game_map.adjust_y(@real_y)) * TILE_WIDTH_HALF  + TILE_WIDTH_HALF
   end
   #--------------------------------------------------------------------------
   # * Get Screen Y-Coordinates
   #--------------------------------------------------------------------------
   def screen_y
-     $game_map.calculate_screen_y(@real_x + @real_y) + TILE_HEIGHT_HALF - SPACE_BETWEEN_CHARACTERN_PATTERN - jump_height
+     ($game_map.adjust_x(@real_x) + $game_map.adjust_y(@real_y)) * TILE_HEIGHT_HALF  + SPACE_BETWEEN_ORIGIN_TILEMAP_AND_SCREEN_TOP_BORDER + TILE_HEIGHT_HALF + SPACE_BETWEEN_CHARACTERN_PATTERN - jump_height
   end
 
   #--------------------------------------------------------------------------
@@ -136,8 +138,8 @@ class Spriteset_Map
   #--------------------------------------------------------------------------
   def update_tilemap
     @tilemap.map_data = $game_map.data
-    @tilemap.ox = $game_map.display_x * TILE_WIDTH_HALF
-    @tilemap.oy = $game_map.display_y * TILE_HEIGHT
+    @tilemap.ox = ($game_map.display_x - $game_map.display_y) * TILE_WIDTH_HALF
+    @tilemap.oy = ($game_map.display_x + $game_map.display_y) * TILE_HEIGHT_HALF
     @tilemap.update
   end
 
@@ -168,13 +170,10 @@ class Game_Map
     @display_y = 0
     create_vehicles
     @name_display = true
-    @display_screen_x = 0
-    @display_screen_y = 0
   end
 
   #--------------------------------------------------------------------------
   # * Number of Horizontal Tiles on Screen
-  # In isometric view, double of tiles visible on screen
   #--------------------------------------------------------------------------
   def screen_tile_x
     Graphics.width / TILE_WIDTH_HALF
@@ -182,7 +181,6 @@ class Game_Map
 
   #--------------------------------------------------------------------------
   # * Number of Vertical Tiles on Screen
-  # In isometric view, double of tiles visible on screen
   #--------------------------------------------------------------------------
   def screen_tile_y
     Graphics.height / TILE_HEIGHT_HALF
@@ -194,7 +192,7 @@ class Game_Map
   def parallax_ox(bitmap)
       w1 = [bitmap.width - Graphics.width, 0].max
       w2 = [width * TILE_WIDTH_HALF - Graphics.width, 1].max
-      (@parallax_x -  @parallax_y) * TILE_WIDTH_HALF
+      (@parallax_x - @parallax_y) * TILE_WIDTH_HALF
   end
 
   #--------------------------------------------------------------------------
@@ -207,57 +205,31 @@ class Game_Map
   end
 
   #--------------------------------------------------------------------------
-  # * Calculate X Coordinate, Minus Display Coordinate
-  #--------------------------------------------------------------------------
-  def adjust_x(x)
-      x - @display_x
-  end
-  #--------------------------------------------------------------------------
-  # * Calculate Y Coordinate, Minus Display Coordinate
-  #--------------------------------------------------------------------------
-  def adjust_y(y)
-      y - @display_y
-  end
-
-  #--------------------------------------------------------------------------
-  # * Calculate Screen X Coordinate, Minus Display Coordinate
-  #--------------------------------------------------------------------------
-  def calculate_screen_x(x)
-      x * TILE_WIDTH_HALF - @display_screen_x
-  end
-  #--------------------------------------------------------------------------
-  # * Calculate Y Coordinate, Minus Display Coordinate
-  #--------------------------------------------------------------------------
-  def calculate_screen_y(y)
-      y * TILE_HEIGHT_HALF - @display_screen_y
-  end
-
-  def get_display_screen_x
-    @display_screen_x
-  end
-
-  def get_display_screen_y
-    @display_screen_y
-  end
- 
-  def set_display_screen_x(x)
-    @display_screen_x = x
-  end
-
-  def set_display_screen_y(y)
-    @display_screen_y = y
-  end
-
-  #--------------------------------------------------------------------------
   # * Set Display Position
   #--------------------------------------------------------------------------
   def set_display_pos(x, y)
-    x = [x, width - screen_tile_x].min
-    y = [y, height - screen_tile_y].min
+    x = [0, [x, width - screen_tile_x].min].max unless loop_horizontal?
+    y = [0, [y, height - screen_tile_y].min].max unless loop_vertical?
     @display_x = x
     @display_y = y
     @parallax_x = x
     @parallax_y = y
+  end
+
+  #--------------------------------------------------------------------------
+  # * Scroll Setup
+  #--------------------------------------------------------------------------
+  def setup_scroll
+    @scroll_direction = 2
+    @scroll_rest = 0
+    @scroll_speed = 4
+  end
+
+  #--------------------------------------------------------------------------
+  # * Calculate Scroll Distance
+  #--------------------------------------------------------------------------
+  def scroll_distance
+    2 ** @scroll_speed / 256.0
   end
 
   #--------------------------------------------------------------------------
@@ -273,16 +245,6 @@ class Game_Map
       @display_y = [@display_y + distance, height - screen_tile_y].min
       @parallax_y += @display_y - last_y
     end
-
-    if loop_horizontal?
-      @display_x += @map.width - distance
-      @display_x %= @map.width 
-      @parallax_x -= distance if @parallax_loop_x
-    else
-      last_x = @display_x
-      @display_x = [@display_x - distance, 0].max
-      @parallax_x += @display_x - last_x
-    end
   end
   #--------------------------------------------------------------------------
   # * Scroll Left
@@ -296,15 +258,6 @@ class Game_Map
       last_x = @display_x
       @display_x = [@display_x - distance, 0].max
       @parallax_x += @display_x - last_x
-    end
-    if loop_vertical?
-      @display_y += @map.height - distance
-      @display_y %= @map.height
-      @parallax_y -= distance if @parallax_loop_y
-    else
-      last_y = @display_y
-      @display_y = [@display_y - distance, 0].max
-      @parallax_y += @display_y - last_y
     end
   end
   #--------------------------------------------------------------------------
@@ -320,15 +273,6 @@ class Game_Map
       @display_x = [@display_x + distance, (width - screen_tile_x)].min
       @parallax_x += @display_x - last_x
     end
-    if loop_vertical?
-      @display_y += distance
-      @display_y %= @map.height
-      @parallax_y += distance if @parallax_loop_y
-    else
-      last_y = @display_y
-      @display_y = [@display_y + distance, height - screen_tile_y].min
-      @parallax_y += @display_y - last_y
-    end
   end
   #--------------------------------------------------------------------------
   # * Scroll Up
@@ -342,15 +286,6 @@ class Game_Map
       last_y = @display_y
       @display_y = [@display_y - distance, 0].max
       @parallax_y += @display_y - last_y
-    end
-     if loop_horizontal?
-      @display_x += distance
-      @display_x %= @map.width
-      @parallax_x += distance if @parallax_loop_x
-    else
-      last_x = @display_x
-      @display_x = [@display_x + distance, (width - screen_tile_x)].min
-      @parallax_x += @display_x - last_x
     end
   end
 end
@@ -397,37 +332,65 @@ class Game_Player < Game_Character
   # * X Coordinate of Screen Center
   #--------------------------------------------------------------------------
   def center_x
-    (Graphics.width / TILE_WIDTH_HALF - 1) / 2.0
+    (Graphics.width / TILE_WIDTH_HALF - 1) / 2
   end
 
   #--------------------------------------------------------------------------
   # * Y Coordinate of Screen Center
   #--------------------------------------------------------------------------
   def center_y
-    (Graphics.height / TILE_HEIGHT_HALF - 1) / 2.0
+    (Graphics.height / TILE_HEIGHT - 1) / 2
+  end
+
+  def center_screen_x
+    Graphics.width / 2 - TILE_WIDTH_HALF
+  end
+
+  def center_screen_y
+    Graphics.height / 2
+  end
+
+
+  #----------------------------------------------------------------------------------------------
+  # * Set Map Display Position to Center of Screen
+  #   TILE_HEIGHT => Correspond à l'espace entre l'origine de la carte et le bord haut de l'ecran
+  #   Cela est dû à la transformation de la carte
+  #----------------------------------------------------------------------------------------------
+  def center(x, y)
+
+    # Get screen coordinates
+    screen_x = (x - y) * TILE_WIDTH_HALF
+    screen_y = (x + y) * TILE_HEIGHT_HALF + SPACE_BETWEEN_ORIGIN_TILEMAP_AND_SCREEN_TOP_BORDER
+
+    # Calculate distance from center screen
+    distance_from_center_x = screen_x - center_screen_x
+    distance_from_center_y = screen_y - center_screen_y
+
+    # Calculate parallax origin tile with new screen coordinates
+    parallax_x = (distance_from_center_x / TILE_WIDTH_HALF + distance_from_center_y / TILE_HEIGHT_HALF) / 2
+    parallax_y = (distance_from_center_y / TILE_HEIGHT_HALF - distance_from_center_x / TILE_WIDTH_HALF) / 2
+
+    $game_map.set_display_pos(parallax_x, parallax_y)
   end
 
   #--------------------------------------------------------------------------
-  # * Set Map Display Position to Center of Screen
+  # * Scroll Processing
   #--------------------------------------------------------------------------
-  def center(x, y)
-    hero_screen_x = (x - y) * TILE_WIDTH_HALF
-    hero_screen_y = (x + y) * TILE_HEIGHT_HALF
+  def update_scroll(last_real_x, last_real_y)
+    screen_x1 = (last_real_x - last_real_y) * TILE_WIDTH_HALF
+    screen_y1 = (last_real_x + last_real_y) * TILE_HEIGHT_HALF + TILE_HEIGHT_HALF + SPACE_BETWEEN_ORIGIN_TILEMAP_AND_SCREEN_TOP_BORDER
+    screen_x2 = (@real_x - @real_y) * TILE_WIDTH_HALF
+    screen_y2 = (@real_x + @real_y) * TILE_HEIGHT_HALF + TILE_HEIGHT_HALF + SPACE_BETWEEN_ORIGIN_TILEMAP_AND_SCREEN_TOP_BORDER
 
-    distance_between_center_x_and_hero_screen_pos_x =  hero_screen_x - (Graphics.width / 2 - TILE_WIDTH_HALF) 
-    distance_between_center_y_and_hero_screen_pos_y =  hero_screen_y - (Graphics.height / 2 - TILE_HEIGHT_HALF) 
+    screen_tile_displayed_x = ($game_map.display_x - $game_map.display_y) * TILE_WIDTH_HALF
+    screen_tile_displayed_y = ($game_map.display_x + $game_map.display_y) * TILE_HEIGHT_HALF
 
-    $game_map.set_display_screen_x(
-      [[distance_between_center_x_and_hero_screen_pos_x, ($game_map.width - $game_map.screen_tile_x) * TILE_WIDTH_HALF].min, 0].max
-    )
+    distance_from_screen_x2 = screen_x2 - screen_tile_displayed_x
+    distance_from_screen_y2 = screen_y2 - screen_tile_displayed_y
 
-    $game_map.set_display_screen_y(
-      [[distance_between_center_y_and_hero_screen_pos_y, ($game_map.height - $game_map.screen_tile_y) * TILE_HEIGHT_HALF].min, 0].max
-    )
-
-    tile_display_x = ($game_map.get_display_screen_x / TILE_WIDTH_HALF + $game_map.get_display_screen_y / TILE_HEIGHT_HALF) / 2.0
-    tile_display_y = ($game_map.get_display_screen_y / TILE_HEIGHT_HALF - ($game_map.get_display_screen_x / TILE_WIDTH_HALF)) / 2.0
-
-    $game_map.set_display_pos(tile_display_x, tile_display_y)
+    $game_map.scroll_down (@real_y - last_real_y) if @real_y > last_real_y && distance_from_screen_y2 > center_screen_y
+    $game_map.scroll_left (last_real_x - @real_x) if @real_x < last_real_x && distance_from_screen_x2 < center_screen_x
+    $game_map.scroll_right(@real_x - last_real_x) if @real_x > last_real_x && distance_from_screen_x2 > center_screen_x
+    $game_map.scroll_up   (last_real_y - @real_y) if @real_y < last_real_y && distance_from_screen_y2 < center_screen_y
   end
 end
