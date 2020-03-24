@@ -13,9 +13,6 @@ class Sprite_Character < Sprite_Base
     #@debug = QDebug.new
     @character = character
     @balloon_duration = 0
-    #@losange = Bitmap.new("Graphics/Pictures/losange_128_64.png")
-    #@spriteLosange = Sprite.new
-    #@spriteLosange.bitmap = @losange
     update
   end
 
@@ -142,8 +139,7 @@ class Spriteset_Map
       @parallax_name = $game_map.parallax_name
       @parallax.bitmap = Cache.parallax(@parallax_name)
     end
-    offset_camera_width = (@parallax.bitmap.width / 2) - (Graphics.width / 2) - TILE_WIDTH_HALF
-    @tilemap.ox = ($game_map.display_x - $game_map.display_y) * TILE_WIDTH_HALF + offset_camera_width
+    @tilemap.ox = ($game_map.display_x - $game_map.display_y) * TILE_WIDTH_HALF + (@parallax.bitmap.width / 2) - (Graphics.width / 2)
     @tilemap.oy = ($game_map.display_x + $game_map.display_y) * TILE_HEIGHT_HALF
     @tilemap.update
   end
@@ -213,8 +209,6 @@ class Game_Map
   def set_display_pos(x, y)
     x = [x, width - screen_tile_x].min
     y = [y, height - screen_tile_y].min
-    @display_x = x
-    @display_y = y
     @parallax_x = x
     @parallax_y = y
   end
