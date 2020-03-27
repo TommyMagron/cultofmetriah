@@ -293,11 +293,11 @@ class Game_Map
   #--------------------------------------------------------------------------
   def check_passage(x, y, bit)
     tiles = ''
+                @debug.refresh(0, @map.data[0, 1, 0])
     all_tiles(x, y).each do |tile_id|
       flag = tileset.flags[tile_id]
       tiles += 'x => ' + x.to_s + ' y => ' + y.to_s + ' ID => ' + tile_id.to_s + ' Flag : ' + flag.to_s + ' Bit : '+ bit.to_s + ' Condition => ' + (flag & 0x10 != 0).to_s
       next if flag & 0x10 != 0            # [☆]: No effect on passage
-      @debug.refresh(0, tiles)
       return true  if flag & bit == 0     # [○] : Passable
       return false if flag & bit == bit   # [×] : Impassable
     end
