@@ -162,7 +162,7 @@ class Game_Map
   # * Object Initialization
   #--------------------------------------------------------------------------
   def initialize
-    #@debug = QDebug.new
+    @debug = QDebug.new
     @screen = Game_Screen.new
     @interpreter = Game_Interpreter.new
     @map_id = 0
@@ -284,6 +284,24 @@ class Game_Map
       @display_y = [@display_y - distance, 0].max
       @parallax_y += @display_y - last_y
     end
+  end
+
+  #--------------------------------------------------------------------------
+  # * Check Passage
+  #     bit:  Inhibit passage check bit
+  # @TODO For now star and stop passage does not takes care of passage, surely problem with Tile ID...
+  #--------------------------------------------------------------------------
+  def check_passage(x, y, bit)
+    tiles = ''
+    all_tiles(x, y).each do |tile_id|
+      flag = tileset.flags[tile_id]
+      tiles += 'x => ' + x.to_s + ' y => ' + y.to_s + ' ID => ' + tile_id.to_s + ' Flag : ' + flag.to_s + ' Bit : '+ bit.to_s + ' Condition => ' + (flag & 0x10 != 0).to_s
+      next if flag & 0x10 != 0            # [☆]: No effect on passage
+      @debug.refresh(0, tiles)
+      return true  if flag & bit == 0     # [○] : Passable
+      return false if flag & bit == bit   # [×] : Impassable
+    end
+    return false                          # Impassable
   end
 end
 
