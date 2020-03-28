@@ -140,7 +140,7 @@ class Spriteset_Map
       @parallax.bitmap = Cache.parallax(@parallax_name)
     end
     @tilemap.ox = ($game_map.display_x - $game_map.display_y) * TILE_WIDTH_HALF + (@parallax.bitmap.width / 2) - (Graphics.width / 2)
-    @tilemap.oy = ($game_map.display_x + $game_map.display_y) * TILE_HEIGHT_HALF
+    @tilemap.oy = ($game_map.display_x + $game_map.display_y) * TILE_HEIGHT_HALF - TILE_HEIGHT_HALF
     @tilemap.update
   end
 
@@ -158,11 +158,14 @@ end
 
 class Game_Map
 
+  MAP_DATA_OFFSET_X_TO_ADJUST_MAP_ORIGIN = 118
+  MAP_DATA_OFFSET_Y_TO_ADJUST_MAP_ORIGIN = 15
+
   #--------------------------------------------------------------------------
   # * Object Initialization
   #--------------------------------------------------------------------------
   def initialize
-    @debug = QDebug.new
+    #@debug = QDebug.new
     @screen = Game_Screen.new
     @interpreter = Game_Interpreter.new
     @map_id = 0
@@ -289,19 +292,45 @@ class Game_Map
   #--------------------------------------------------------------------------
   # * Check Passage
   #     bit:  Inhibit passage check bit
-  # @TODO For now star and stop passage does not takes care of passage, surely problem with Tile ID...
+  # @TODO For now stop passage does not takes care of passage, surely problem with Tile ID...
   #--------------------------------------------------------------------------
   def check_passage(x, y, bit)
-    tiles = ''
-                @debug.refresh(0, @map.data[0, 1, 0])
     all_tiles(x, y).each do |tile_id|
       flag = tileset.flags[tile_id]
-      tiles += 'x => ' + x.to_s + ' y => ' + y.to_s + ' ID => ' + tile_id.to_s + ' Flag : ' + flag.to_s + ' Bit : '+ bit.to_s + ' Condition => ' + (flag & 0x10 != 0).to_s
       next if flag & 0x10 != 0            # [☆]: No effect on passage
       return true  if flag & bit == 0     # [○] : Passable
       return false if flag & bit == bit   # [×] : Impassable
     end
     return false                          # Impassable
+  end
+
+  def map_tile_adjust_xy(x, y)
+    tile_x = (2 * (x - y)) + MAP_DATA_OFFSET_X_TO_ADJUST_MAP_ORIGIN
+    tile_y = (x + y) + MAP_DATA_OFFSET_Y_TO_ADJUST_MAP_ORIGIN
+
+    point = Class.new do
+      attr_accessor :x, :y
+    end.new
+    
+    point.x = tile_x
+    point.y = tile_y
+
+    return point
+  end
+
+  #--------------------------------------------------------------------------
+  # * Get Array of All Layer Tiles (Top to Bottom) at Specified Coordinates
+  #--------------------------------------------------------------------------
+  def layered_tiles(x, y)
+    newTilePoint = map_tile_adjust_xy(x, y)
+    [2, 1, 0].collect {|z| tile_id(newTilePoint.x, newTilePoint.y, z) }
+  end
+  #--------------------------------------------------------------------------
+  # * Get Array of All Tiles (Including Events) at Specified Coordinates
+  #--------------------------------------------------------------------------
+  def all_tiles(x, y)
+    newTilePoint = map_tile_adjust_xy(x, y)
+    tile_events_xy(newTilePoint.x, newTilePoint.y).collect {|ev| ev.tile_id } + layered_tiles(x, y)
   end
 end
 
