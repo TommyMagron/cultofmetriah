@@ -91,7 +91,7 @@ class Game_CharacterBase
   # * Get Screen Y-Coordinates
   #--------------------------------------------------------------------------
   def screen_y
-    Graphics.height / 2 + SPACE_BETWEEN_CHARACTERN_PATTERN - jump_height
+    Graphics.height / 2 + SPACE_BETWEEN_CHARACTERN_PATTERN - jump_height - TILE_HEIGHT_HALF
   end
 
   #--------------------------------------------------------------------------
@@ -140,7 +140,7 @@ class Spriteset_Map
       @parallax.bitmap = Cache.parallax(@parallax_name)
     end
     @tilemap.ox = ($game_map.display_x - $game_map.display_y) * TILE_WIDTH_HALF + (@parallax.bitmap.width / 2) - (Graphics.width / 2)
-    @tilemap.oy = ($game_map.display_x + $game_map.display_y) * TILE_HEIGHT_HALF - TILE_HEIGHT_HALF
+    @tilemap.oy = ($game_map.display_x + $game_map.display_y) * TILE_HEIGHT_HALF
     @tilemap.update
   end
 
@@ -195,7 +195,7 @@ class Game_Map
   # * Add an offset equal to middle of map to center camera on the map
   #--------------------------------------------------------------------------
   def parallax_ox(bitmap)
-      offset_camera_width = (bitmap.width / 2) - (Graphics.width / 2) - TILE_WIDTH_HALF
+      offset_camera_width = (bitmap.width / 2) - (Graphics.width / 2)
       (@parallax_x - @parallax_y) * TILE_WIDTH_HALF + offset_camera_width
   end
 
