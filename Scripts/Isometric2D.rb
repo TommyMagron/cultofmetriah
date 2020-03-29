@@ -85,33 +85,13 @@ class Game_CharacterBase
   # * Get Screen X-Coordinates
   #--------------------------------------------------------------------------
   def screen_x
-     Graphics.width / 2
+    ($game_map.adjust_x(@real_x) - $game_map.adjust_y(@real_y)) * TILE_WIDTH_HALF + (Graphics.width / 2)
   end
   #--------------------------------------------------------------------------
   # * Get Screen Y-Coordinates
   #--------------------------------------------------------------------------
   def screen_y
-    Graphics.height / 2 + SPACE_BETWEEN_CHARACTERN_PATTERN - jump_height - TILE_HEIGHT_HALF
-  end
-
-  #--------------------------------------------------------------------------
-  # * Move Straight
-  #     d:        Direction (2,4,6,8)
-  #     turn_ok : Allows change of direction on the spot
-  #--------------------------------------------------------------------------
-  def move_straight(d, turn_ok = true)
-    @move_succeed = passable?(@x, @y, d)
-    if @move_succeed
-      set_direction(d)
-      @x = $game_map.round_x_with_direction(@x, d)
-      @y = $game_map.round_y_with_direction(@y, d)
-      @real_x = $game_map.x_with_direction(@x, reverse_dir(d))
-      @real_y = $game_map.y_with_direction(@y, reverse_dir(d))
-      increase_steps
-    elsif turn_ok
-      set_direction(d)
-      check_event_trigger_touch_front
-    end
+    ($game_map.adjust_x(@real_x) + $game_map.adjust_y(@real_y)) * TILE_HEIGHT_HALF + SPACE_BETWEEN_CHARACTERN_PATTERN - jump_height - TILE_HEIGHT_HALF + (Graphics.height / 2)
   end
 end
 
@@ -370,6 +350,19 @@ class Game_Player < Game_Character
     make_encounter_count
     vehicle.refresh if vehicle
     @followers.synchronize(x, y, direction)
+  end
+
+  #--------------------------------------------------------------------------
+  # * Get Screen X-Coordinates
+  #--------------------------------------------------------------------------
+  def screen_x
+     Graphics.width / 2
+  end
+  #--------------------------------------------------------------------------
+  # * Get Screen Y-Coordinates
+  #--------------------------------------------------------------------------
+  def screen_y
+    Graphics.height / 2 + SPACE_BETWEEN_CHARACTERN_PATTERN - jump_height - TILE_HEIGHT_HALF
   end
 
   #--------------------------------------------------------------------------
