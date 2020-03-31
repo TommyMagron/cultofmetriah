@@ -38,11 +38,11 @@ class Scene_Title < Scene_Base
   def create_background
     @sprite1 = Sprite.new
     @sprite1.bitmap = Cache.title1($data_system.title1_name)
-    @sprite2 = Sprite.new
-    @sprite2.bitmap = Cache.title2($data_system.title2_name)
+    @spritesheet = Sprite.new
+    @spritesheet.bitmap = Cache.title2($data_system.title2_name)
     center_sprite(@sprite1)
-    center_sprite(@sprite2)
   end
+
   #--------------------------------------------------------------------------
   # * Create Foreground
   #--------------------------------------------------------------------------
@@ -51,6 +51,12 @@ class Scene_Title < Scene_Base
     @foreground_sprite.bitmap = Bitmap.new(Graphics.width, Graphics.height)
     @foreground_sprite.z = 100
     draw_game_title if $data_system.opt_draw_title
+
+    @sprite_rideau = Sprite.new
+    #@rect_rideau = @spritesheet.src_rect()
+    #@sprite_rideau.bitmap = Bitmap.new
+    #@sprite_rideau.bitmap.blt(0, 0, @spritesheet.bitmap, Rect.new(32, 32))
+
   end
   #--------------------------------------------------------------------------
   # * Draw Game Title
@@ -66,8 +72,8 @@ class Scene_Title < Scene_Base
   def dispose_background
     @sprite1.bitmap.dispose
     @sprite1.dispose
-    @sprite2.bitmap.dispose
-    @sprite2.dispose
+    #@sprite2.bitmap.dispose
+    #@sprite2.dispose
   end
   #--------------------------------------------------------------------------
   # * Free Foreground
