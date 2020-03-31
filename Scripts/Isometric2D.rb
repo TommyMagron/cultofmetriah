@@ -10,7 +10,7 @@ class Sprite_Character < Sprite_Base
 
   def initialize(viewport, character = nil)
     super(viewport)
-    #@debug = QDebug.new
+    @debug = QDebug.new
     @character = character
     @balloon_duration = 0
     update
@@ -40,6 +40,7 @@ class Sprite_Character < Sprite_Base
     if @tile_id == 0
       #index = @character.character_index : le personnage possède tout son sprite
       pattern = @character.pattern < 8 ? @character.pattern : 1 #@TODO : change pattern calculation (pattern represents one column)
+      @debug.refresh(0, pattern)
       sx = pattern * @cw #@TODO test sprite complet, replace (index % 4 * 3 + pattern) * @cw
       sy = ((@character.direction - 2) / 2) * @ch
       self.src_rect.set(sx, sy, @cw, @ch)
