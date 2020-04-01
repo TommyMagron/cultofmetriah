@@ -446,9 +446,9 @@ class Game_Event
   #     dx:  A certain number of tiles left/right of screen's center
   #     dy:  A certain number of tiles above/below screen's center
   #--------------------------------------------------------------------------
-  def near_the_screen?(dx = 12, dy = 7)
+  def near_the_screen?(dx = 12, dy = 8)
     ax = ($game_map.adjust_x(@real_x) - $game_map.adjust_y(@real_y)) - Graphics.width / 2 / TILE_WIDTH_HALF
-    ay = ($game_map.adjust_x(@real_x) + $game_map.adjust_y(@real_y)) - Graphics.height / 2 / TILE_HEIGHT_HALF
+    ay = ($game_map.adjust_x(@real_x) + $game_map.adjust_y(@real_y)) - Graphics.height / 2 / TILE_HEIGHT
     ax >= -dx && ax <= dx && ay >= -dy && ay <= dy
   end
 end
