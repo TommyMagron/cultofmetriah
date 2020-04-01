@@ -98,13 +98,13 @@ class Game_CharacterBase
   #--------------------------------------------------------------------------
   # * Update Animation Pattern
   #--------------------------------------------------------------------------
-  def update_anime_pattern
-    if !@step_anime && @stop_count > 0
-      @pattern = @original_pattern
-    else
-      @pattern = (@pattern + 1)# not need to calculate because char takes all the patterns % 4
-    end
-  end
+  #def update_anime_pattern
+  #  if !@step_anime && @stop_count > 0
+  #    @pattern = @original_pattern
+  #  else
+  #    @pattern = (@pattern + 1)# not need to calculate because char takes all the patterns % 4
+  #  end
+  #end
 end
 
 class Spriteset_Map
