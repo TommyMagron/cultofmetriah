@@ -10,7 +10,7 @@ class Sprite_Character < Sprite_Base
 
   def initialize(viewport, character = nil)
     super(viewport)
-    @debug = QDebug.new
+    #@debug = QDebug.new
     @character = character
     @balloon_duration = 0
     update
@@ -40,7 +40,7 @@ class Sprite_Character < Sprite_Base
     if @tile_id == 0
       #index = @character.character_index : le personnage possède tout son sprite
       pattern = @character.pattern < 8 ? @character.pattern : 1 #@TODO : change pattern calculation (pattern represents one column)
-      @debug.refresh(0, pattern)
+      #@debug.refresh(0, pattern)
       sx = pattern * @cw #@TODO test sprite complet, replace (index % 4 * 3 + pattern) * @cw
       sy = ((@character.direction - 2) / 2) * @ch
       self.src_rect.set(sx, sy, @cw, @ch)
@@ -93,6 +93,17 @@ class Game_CharacterBase
   #--------------------------------------------------------------------------
   def screen_y
     ($game_map.adjust_x(@real_x) + $game_map.adjust_y(@real_y)) * TILE_HEIGHT_HALF + SPACE_BETWEEN_CHARACTERN_PATTERN - jump_height - TILE_HEIGHT_HALF + (Graphics.height / 2)
+  end
+
+  #--------------------------------------------------------------------------
+  # * Update Animation Pattern
+  #--------------------------------------------------------------------------
+  def update_anime_pattern
+    if !@step_anime && @stop_count > 0
+      @pattern = @original_pattern
+    else
+      @pattern = (@pattern + 1)# not need to calculate because char takes all the patterns % 4
+    end
   end
 end
 
@@ -417,5 +428,27 @@ class Game_Player < Game_Character
     $game_map.scroll_left (last_real_x - @real_x) if @real_x < last_real_x
     $game_map.scroll_right(@real_x - last_real_x) if @real_x > last_real_x
     $game_map.scroll_up   (last_real_y - @real_y) if @real_y < last_real_y
+  end
+end
+
+class Game_Event
+  def initialize(map_id, event)
+    super()
+    @map_id = map_id
+    @event = event
+    @id = @event.id
+    moveto(@event.x, @event.y)
+    refresh
+  end
+
+  #--------------------------------------------------------------------------
+  # * Determine if Near Visible Area of Screen
+  #     dx:  A certain number of tiles left/right of screen's center
+  #     dy:  A certain number of tiles above/below screen's center
+  #--------------------------------------------------------------------------
+  def near_the_screen?(dx = 12, dy = 7)
+    ax = ($game_map.adjust_x(@real_x) - $game_map.adjust_y(@real_y)) - Graphics.width / 2 / TILE_WIDTH_HALF
+    ay = ($game_map.adjust_x(@real_x) + $game_map.adjust_y(@real_y)) - Graphics.height / 2 / TILE_HEIGHT_HALF
+    ax >= -dx && ax <= dx && ay >= -dy && ay <= dy
   end
 end
