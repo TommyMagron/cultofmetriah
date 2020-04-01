@@ -39,7 +39,7 @@ class Sprite_Character < Sprite_Base
   def update_src_rect
     if @tile_id == 0
       #index = @character.character_index : le personnage possède tout son sprite
-      pattern = @character.pattern < 7 ? @character.pattern : 1 #@TODO : change pattern calculation (pattern represents one column)
+      pattern = @character.pattern < 8 ? @character.pattern : 1 #@TODO : change pattern calculation (pattern represents one column)
       #@debug.refresh(0, pattern)
       sx = pattern * @cw #@TODO test sprite complet, replace (index % 4 * 3 + pattern) * @cw
       sy = ((@character.direction - 2) / 2) * @ch
@@ -102,7 +102,7 @@ class Game_CharacterBase
     if !@step_anime && @stop_count > 0
       @pattern = @original_pattern
     else
-      @pattern = (@pattern + 1) % 7# not need to calculate because char takes all the patterns % 4
+      @pattern = (@pattern + 1) % 8# not need to calculate because char takes all the patterns % 4
     end
   end
 end
