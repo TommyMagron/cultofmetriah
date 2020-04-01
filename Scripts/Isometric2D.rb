@@ -96,6 +96,28 @@ class Game_CharacterBase
   end
 
   #--------------------------------------------------------------------------
+  # * Update Walking/Stepping Animation
+  #--------------------------------------------------------------------------
+  def update_animation
+    update_anime_count
+    if @anime_count > 18 - real_move_speed * 2
+      update_anime_pattern
+      @anime_count = 0
+    end
+  end
+
+  #--------------------------------------------------------------------------
+  # * Update Animation Count
+  #--------------------------------------------------------------------------
+  def update_anime_count
+    if moving? && @walk_anime
+      @anime_count += 2.5
+    elsif @step_anime || @pattern != @original_pattern
+      @anime_count += 1
+    end
+  end
+
+  #--------------------------------------------------------------------------
   # * Update Animation Pattern
   #--------------------------------------------------------------------------
   def update_anime_pattern
