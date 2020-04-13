@@ -110,7 +110,7 @@ class Game_CharacterBase
   # * Initialize Public Member Variables
   #--------------------------------------------------------------------------
   def init_public_members
-    @debug = QDebug.new
+    #@debug = QDebug.new
     @id = 0
     @x = 0
     @y = 0
