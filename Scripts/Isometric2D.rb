@@ -8,11 +8,14 @@ SPACE_BETWEEN_ORIGIN_TILEMAP_AND_SCREEN_TOP_BORDER = 64
 
 class Sprite_Character < Sprite_Base
 
+
+
   def initialize(viewport, character = nil)
     super(viewport)
     #@debug = QDebug.new
     @character = character
     @balloon_duration = 0
+    @character_bitmap_name = ''
     update
   end
 
@@ -20,7 +23,26 @@ class Sprite_Character < Sprite_Base
   # * Set Character Bitmap
   #--------------------------------------------------------------------------
   def set_character_bitmap
-    self.bitmap = Cache.character(@character_name)
+    begin
+      if @character.moving? then
+          self.bitmap = Cache.character(@character_name)
+          @character_bitmap_name = @character_name
+      else
+        if @character.is_a?(Game_Player) && Input.dir4 == 0 then
+          self.bitmap = Cache.character("HERO_STATIC")
+          @character_bitmap_name = "HERO_STATIC"
+        elsif @character != nil then
+          self.bitmap = Cache.character(@character_name + "_STATIC")
+          @character_bitmap_name = @character_name + "_STATIC"
+        else
+          self.bitmap = Cache.character(@character_name)
+          @character_bitmap_name = @character_name
+        end
+      end
+    rescue
+      self.bitmap = Cache.character(@character_name)
+      @character_bitmap_name = @character_name
+    end
     sign = @character_name[/^[\!\$]./]
     if sign && sign.include?('$')
       @cw = bitmap.width / 3
@@ -31,6 +53,35 @@ class Sprite_Character < Sprite_Base
     end
     self.ox = @cw / 2
     self.oy = @ch
+  end
+
+  #--------------------------------------------------------------------------
+  # * Update Transfer Origin Bitmap
+  #--------------------------------------------------------------------------
+  def update_bitmap
+    if graphic_changed?
+      @tile_id = @character.tile_id
+      @character_name = @character.character_name
+      @character_index = @character.character_index
+      if @tile_id > 0
+        set_tile_bitmap
+      else
+        set_character_bitmap
+      end
+    end
+  end
+
+  #--------------------------------------------------------------------------
+  # * Determine if Graphic Changed
+  #--------------------------------------------------------------------------
+  def graphic_changed?
+    @tile_id != @character.tile_id ||
+    @character_name != @character.character_name ||
+    @character_index != @character.character_index ||
+    @character.is_a?(Game_Player) && Input.dir4 > 0 && @character_bitmap_name.include?("_STATIC") ||
+    @character.is_a?(Game_Player) && Input.dir4 == 0 && !@character_bitmap_name.include?("_STATIC") ||
+    @character.is_a?(Game_Event) && @character.anime_count > 0 && @character.moving? && @character_bitmap_name.include?("_STATIC") ||
+    @character.is_a?(Game_Event) && @character.stop_count > 0 && !@character_bitmap_name.include?("_STATIC")
   end
 
   #--------------------------------------------------------------------------
@@ -126,6 +177,14 @@ class Game_CharacterBase
     else
       @pattern = (@pattern + 1) % 8# not need to calculate because char takes all the patterns % 4
     end
+  end
+
+  def anime_count
+    @anime_count
+  end
+
+  def stop_count
+    @stop_count
   end
 end
 
