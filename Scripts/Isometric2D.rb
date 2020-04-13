@@ -23,6 +23,20 @@ class Sprite_Character < Sprite_Base
   # * Set Character Bitmap
   #--------------------------------------------------------------------------
   def set_character_bitmap
+    choose_bitmap_in_terms_of_movement
+    sign = @character_name[/^[\!\$]./]
+    if sign && sign.include?('$')
+      @cw = bitmap.width / 3
+      @ch = bitmap.height / 4
+    else
+      @cw = bitmap.width / 8
+      @ch = bitmap.height / 4
+    end
+    self.ox = @cw / 2
+    self.oy = @ch
+  end
+
+  def choose_bitmap_in_terms_of_movement
     begin
       if @character.moving? then
           self.bitmap = Cache.character(@character_name)
@@ -43,18 +57,7 @@ class Sprite_Character < Sprite_Base
       self.bitmap = Cache.character(@character_name)
       @character_bitmap_name = @character_name
     end
-    sign = @character_name[/^[\!\$]./]
-    if sign && sign.include?('$')
-      @cw = bitmap.width / 3
-      @ch = bitmap.height / 4
-    else
-      @cw = bitmap.width / 8
-      @ch = bitmap.height / 4
-    end
-    self.ox = @cw / 2
-    self.oy = @ch
   end
-
   #--------------------------------------------------------------------------
   # * Update Transfer Origin Bitmap
   #--------------------------------------------------------------------------
@@ -107,7 +110,7 @@ class Game_CharacterBase
   # * Initialize Public Member Variables
   #--------------------------------------------------------------------------
   def init_public_members
-    #@debug = QDebug.new
+    @debug = QDebug.new
     @id = 0
     @x = 0
     @y = 0
@@ -161,7 +164,7 @@ class Game_CharacterBase
   # * Update Animation Count
   #--------------------------------------------------------------------------
   def update_anime_count
-    if moving? && @walk_anime
+    if @walk_anime
       @anime_count += 2.5
     elsif @step_anime || @pattern != @original_pattern
       @anime_count += 1
@@ -170,13 +173,10 @@ class Game_CharacterBase
 
   #--------------------------------------------------------------------------
   # * Update Animation Pattern
+  # Characters are always animated
   #--------------------------------------------------------------------------
   def update_anime_pattern
-    if !@step_anime && @stop_count > 0
-      @pattern = @original_pattern
-    else
       @pattern = (@pattern + 1) % 8# not need to calculate because char takes all the patterns % 4
-    end
   end
 
   def anime_count
