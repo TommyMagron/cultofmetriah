@@ -164,11 +164,11 @@ class Game_CharacterBase
   # * Update Animation Count
   #--------------------------------------------------------------------------
   def update_anime_count
-    if @walk_anime
+    #if @walk_anime
       @anime_count += 2.5
-    elsif @step_anime || @pattern != @original_pattern
-      @anime_count += 1
-    end
+    #elsif @step_anime || @pattern != @original_pattern
+    #  @anime_count += 1
+    #end
   end
 
   #--------------------------------------------------------------------------
