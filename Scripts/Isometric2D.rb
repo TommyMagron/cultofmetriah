@@ -126,7 +126,7 @@ class Game_CharacterBase
     @direction_fix = false
     @opacity = 255
     @blend_type = 0
-    @direction = 6
+    @direction = 2
     @pattern = 1
     @priority_type = 1
     @through = false
