@@ -365,7 +365,6 @@ class Game_Map
   #--------------------------------------------------------------------------
   # * Check Passage
   #     bit:  Inhibit passage check bit
-  # @TODO For now stop passage does not takes care of passage, surely problem with Tile ID...
   #--------------------------------------------------------------------------
   def check_passage(x, y, bit)
     all_tiles(x, y).each do |tile_id|
