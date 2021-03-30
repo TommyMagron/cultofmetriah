@@ -8,8 +8,6 @@ SPACE_BETWEEN_ORIGIN_TILEMAP_AND_SCREEN_TOP_BORDER = 64
 
 class Sprite_Character < Sprite_Base
 
-
-
   def initialize(viewport, character = nil)
     super(viewport)
     #@debug = QDebug.new
