@@ -10,7 +10,6 @@ class Sprite_Character < Sprite_Base
 
   def initialize(viewport, character = nil)
     super(viewport)
-    #@debug = QDebug.new
     @character = character
     @balloon_duration = 0
     @character_bitmap_name = ''
@@ -108,7 +107,6 @@ class Game_CharacterBase
   # * Initialize Public Member Variables
   #--------------------------------------------------------------------------
   def init_public_members
-    #@debug = QDebug.new
     @id = 0
     @x = 0
     @y = 0
@@ -138,12 +136,16 @@ class Game_CharacterBase
   # * Get Screen X-Coordinates
   #--------------------------------------------------------------------------
   def screen_x
+    p "screen_x"
+    p @real_x.to_s
     ($game_map.adjust_x(@real_x) - $game_map.adjust_y(@real_y)) * TILE_WIDTH_HALF + (Graphics.width / 2)
   end
   #--------------------------------------------------------------------------
   # * Get Screen Y-Coordinates
   #--------------------------------------------------------------------------
   def screen_y
+    p "screen_y"
+    p @real_y.to_s
     ($game_map.adjust_x(@real_x) + $game_map.adjust_y(@real_y)) * TILE_HEIGHT_HALF + SPACE_BETWEEN_CHARACTERN_PATTERN - jump_height - TILE_HEIGHT_HALF + (Graphics.height / 2)
   end
 
@@ -189,7 +191,6 @@ end
 class Spriteset_Map
 
   def initialize
-    #@debug = QDebug.new
     create_viewports
     create_tilemap
     create_parallax
@@ -229,14 +230,13 @@ end
 
 class Game_Map
 
-  MAP_DATA_OFFSET_X_TO_ADJUST_MAP_ORIGIN = 118
+  TILE_OFFSET_X_IN_MAP_DATA = 2
   MAP_DATA_OFFSET_Y_TO_ADJUST_MAP_ORIGIN = 15
 
   #--------------------------------------------------------------------------
   # * Object Initialization
   #--------------------------------------------------------------------------
   def initialize
-    #@debug = QDebug.new
     @screen = Game_Screen.new
     @interpreter = Game_Interpreter.new
     @map_id = 0
@@ -375,7 +375,10 @@ class Game_Map
   end
 
   def map_tile_adjust_xy(x, y)
-    tile_x = (2 * (x - y)) + MAP_DATA_OFFSET_X_TO_ADJUST_MAP_ORIGIN
+    parallax_bitmap = Cache.parallax(@parallax_name)
+    map_data_offset_x_to_adjust_map_origin = (parallax_bitmap.width / TILE_WIDTH_HALF) / 2 - TILE_OFFSET_X_IN_MAP_DATA
+
+    tile_x = (2 * (x - y)) + map_data_offset_x_to_adjust_map_origin
     tile_y = (x + y) + MAP_DATA_OFFSET_Y_TO_ADJUST_MAP_ORIGIN
 
     point = Class.new do
@@ -407,7 +410,6 @@ end
 class Game_Player < Game_Character
   def initialize
     super
-    #@debug = QDebug.new
     @vehicle_type = :walk           # Type of vehicle currently being ridden
     @vehicle_getting_on = false     # Boarding vehicle flag
     @vehicle_getting_off = false    # Getting off vehicle flag
@@ -510,14 +512,6 @@ class Game_Player < Game_Character
 end
 
 class Game_Event
-  def initialize(map_id, event)
-    super()
-    @map_id = map_id
-    @event = event
-    @id = @event.id
-    moveto(@event.x, @event.y)
-    refresh
-  end
 
   #--------------------------------------------------------------------------
   # * Determine if Near Visible Area of Screen
@@ -529,4 +523,13 @@ class Game_Event
     ay = ($game_map.adjust_x(@real_x) + $game_map.adjust_y(@real_y)) - Graphics.height / 2 / TILE_HEIGHT
     ax >= -dx && ax <= dx && ay >= -dy && ay <= dy
   end
+end
+
+
+class Tilemap
+
+  def update
+    
+  end
+
 end
