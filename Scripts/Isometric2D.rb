@@ -136,16 +136,12 @@ class Game_CharacterBase
   # * Get Screen X-Coordinates
   #--------------------------------------------------------------------------
   def screen_x
-    p "screen_x"
-    p @real_x.to_s
     ($game_map.adjust_x(@real_x) - $game_map.adjust_y(@real_y)) * TILE_WIDTH_HALF + (Graphics.width / 2)
   end
   #--------------------------------------------------------------------------
   # * Get Screen Y-Coordinates
   #--------------------------------------------------------------------------
   def screen_y
-    p "screen_y"
-    p @real_y.to_s
     ($game_map.adjust_x(@real_x) + $game_map.adjust_y(@real_y)) * TILE_HEIGHT_HALF + SPACE_BETWEEN_CHARACTERN_PATTERN - jump_height - TILE_HEIGHT_HALF + (Graphics.height / 2)
   end
 
@@ -211,8 +207,8 @@ class Spriteset_Map
       @parallax_name = $game_map.parallax_name
       @parallax.bitmap = Cache.parallax(@parallax_name)
     end
-    @tilemap.ox = ($game_map.display_x - $game_map.display_y) * TILE_WIDTH_HALF + (@parallax.bitmap.width / 2) - (Graphics.width / 2)
-    @tilemap.oy = ($game_map.display_x + $game_map.display_y) * TILE_HEIGHT_HALF
+    #@tilemap.ox = ($game_map.display_x - $game_map.display_y) * TILE_WIDTH_HALF + (@parallax.bitmap.width / 2) - (Graphics.width / 2)
+    #@tilemap.oy = ($game_map.display_x + $game_map.display_y) * TILE_HEIGHT_HALF
     @tilemap.update
   end
 
@@ -232,6 +228,7 @@ class Game_Map
 
   TILE_OFFSET_X_IN_MAP_DATA = 2
   MAP_DATA_OFFSET_Y_TO_ADJUST_MAP_ORIGIN = 15
+  NUMBER_OF_32PX_TILES_FOR_ONE_ISOMETRIC_TILE_WIDTH = TILE_WIDTH / 32
 
   #--------------------------------------------------------------------------
   # * Object Initialization
@@ -281,8 +278,8 @@ class Game_Map
   # * Set Display Position
   #--------------------------------------------------------------------------
   def set_display_pos(x, y)
-    x = [x, width - screen_tile_x].min
-    y = [y, height - screen_tile_y].min
+    x = [x, width * NUMBER_OF_32PX_TILES_FOR_ONE_ISOMETRIC_TILE_WIDTH - screen_tile_x].min
+    y = [y, height * NUMBER_OF_32PX_TILES_FOR_ONE_ISOMETRIC_TILE_WIDTH - screen_tile_y].min
     @parallax_x = x
     @parallax_y = y
   end
@@ -307,57 +304,43 @@ class Game_Map
   # * Scroll Down
   #--------------------------------------------------------------------------
   def scroll_down(distance)
-    if loop_vertical?
-      @display_y += distance
-      @display_y %= @map.height
-      @parallax_y += distance if @parallax_loop_y
-    else
       last_y = @display_y
-      @display_y = [@display_y + distance, height - screen_tile_y].min
+      @display_y = [@display_y + distance, height * NUMBER_OF_32PX_TILES_FOR_ONE_ISOMETRIC_TILE_WIDTH - screen_tile_y].min
       @parallax_y += @display_y - last_y
-    end
   end
   #--------------------------------------------------------------------------
   # * Scroll Left
   #--------------------------------------------------------------------------
   def scroll_left(distance)
-    if loop_horizontal?
-      @display_x += @map.width - distance
-      @display_x %= @map.width 
-      @parallax_x -= distance if @parallax_loop_x
-    else
       last_x = @display_x
       @display_x = [@display_x - distance, 0].max
       @parallax_x += @display_x - last_x
-    end
   end
   #--------------------------------------------------------------------------
   # * Scroll Right
   #--------------------------------------------------------------------------
   def scroll_right(distance)
-    if loop_horizontal?
-      @display_x += distance
-      @display_x %= @map.width
-      @parallax_x += distance if @parallax_loop_x
-    else
       last_x = @display_x
-      @display_x = [@display_x + distance, (width - screen_tile_x)].min
+      @display_x = [@display_x + distance, width * NUMBER_OF_32PX_TILES_FOR_ONE_ISOMETRIC_TILE_WIDTH - screen_tile_x].min
       @parallax_x += @display_x - last_x
-    end
   end
   #--------------------------------------------------------------------------
   # * Scroll Up
   #--------------------------------------------------------------------------
   def scroll_up(distance)
-    if loop_vertical?
-      @display_y += @map.height - distance
-      @display_y %= @map.height
-      @parallax_y -= distance if @parallax_loop_y
-    else
       last_y = @display_y
       @display_y = [@display_y - distance, 0].max
       @parallax_y += @display_y - last_y
-    end
+  end
+
+  #--------------------------------------------------------------------------
+  # * Determine Valid Coordinates
+  # width fait référence au nombre de cases possibles sur l'axe X
+  # height fait référence au nombre de cases possibles sur l'axe Y
+  # Dans le cas d'une vue isométrique en diamant, projection d'une carte carrée, la hauteur et la largeur de la carte sont égaux.
+  #--------------------------------------------------------------------------
+  def valid?(x, y)
+    x >= 0 && x < width && y >= 0 && y < height
   end
 
   #--------------------------------------------------------------------------
