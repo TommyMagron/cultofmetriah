@@ -20,7 +20,7 @@ class Sprite_Character < Sprite_Base
   # * Set Character Bitmap
   #--------------------------------------------------------------------------
   def set_character_bitmap
-    choose_bitmap_in_terms_of_movement
+    self.bitmap = choose_bitmap_in_terms_of_movement
     sign = @character_name[/^[\!\$]./]
     if sign && sign.include?('$')
       @cw = bitmap.width / 3
@@ -30,31 +30,23 @@ class Sprite_Character < Sprite_Base
       @ch = bitmap.height / 4
     end
     self.ox = @cw / 2
+
     self.oy = @ch
   end
 
+  #--------------------------------------------------------------------------
+  # Determine which sprite to display in terms of movment
+  #--------------------------------------------------------------------------
   def choose_bitmap_in_terms_of_movement
-    begin
-      if @character.moving? then
-          self.bitmap = Cache.character(@character_name)
-          @character_bitmap_name = @character_name
+      if @character_name != "" && !@character.moving? then
+        @character_bitmap_name = @character_name + "_STATIC"
+        Cache.character(@character_name + "_STATIC")
       else
-        if @character.is_a?(Game_Player) && Input.dir4 == 0 then
-          self.bitmap = Cache.character("HERO_STATIC")
-          @character_bitmap_name = "HERO_STATIC"
-        elsif @character != nil then
-          self.bitmap = Cache.character(@character_name + "_STATIC")
-          @character_bitmap_name = @character_name + "_STATIC"
-        else
-          self.bitmap = Cache.character(@character_name)
-          @character_bitmap_name = @character_name
-        end
+        @character_bitmap_name = @character_name
+        Cache.character(@character_name)
       end
-    rescue
-      self.bitmap = Cache.character(@character_name)
-      @character_bitmap_name = @character_name
-    end
   end
+
   #--------------------------------------------------------------------------
   # * Update Transfer Origin Bitmap
   #--------------------------------------------------------------------------
@@ -73,15 +65,14 @@ class Sprite_Character < Sprite_Base
 
   #--------------------------------------------------------------------------
   # * Determine if Graphic Changed
+  # * character_bitmap can be empty (ex: Followers if not displayed)
   #--------------------------------------------------------------------------
   def graphic_changed?
     @tile_id != @character.tile_id ||
     @character_name != @character.character_name ||
     @character_index != @character.character_index ||
-    @character.is_a?(Game_Player) && Input.dir4 > 0 && @character_bitmap_name.include?("_STATIC") ||
-    @character.is_a?(Game_Player) && Input.dir4 == 0 && !@character_bitmap_name.include?("_STATIC") ||
-    @character.is_a?(Game_Event) && @character.anime_count > 0 && @character.moving? && @character_bitmap_name.include?("_STATIC") ||
-    @character.is_a?(Game_Event) && @character.stop_count > 0 && !@character_bitmap_name.include?("_STATIC")
+    (@character.moving? && @character_bitmap_name != "" && @character_bitmap_name.include?("_STATIC") && @character.anime_count > 0) ||
+    (!@character.moving? && @character_bitmap_name != "" && !@character_bitmap_name.include?("_STATIC") && @character.stop_count > 0)
   end
 
   #--------------------------------------------------------------------------
@@ -91,7 +82,6 @@ class Sprite_Character < Sprite_Base
     if @tile_id == 0
       #index = @character.character_index : le personnage possède tout son sprite
       pattern = @character.pattern < 8 ? @character.pattern : 1 #@TODO : change pattern calculation (pattern represents one column)
-      #@debug.refresh(0, pattern)
       sx = pattern * @cw #@TODO test sprite complet, replace (index % 4 * 3 + pattern) * @cw
       sy = ((@character.direction - 2) / 2) * @ch
       self.src_rect.set(sx, sy, @cw, @ch)
@@ -110,8 +100,8 @@ class Game_CharacterBase
     @id = 0
     @x = 0
     @y = 0
-    @real_x = 0
-    @real_y = 0
+    @real_x = 0.0
+    @real_y = 0.0
     @tile_id = 0
     @character_name = ""
     @character_index = 0
@@ -207,8 +197,8 @@ class Spriteset_Map
       @parallax_name = $game_map.parallax_name
       @parallax.bitmap = Cache.parallax(@parallax_name)
     end
-    #@tilemap.ox = ($game_map.display_x - $game_map.display_y) * TILE_WIDTH_HALF + (@parallax.bitmap.width / 2) - (Graphics.width / 2)
-    #@tilemap.oy = ($game_map.display_x + $game_map.display_y) * TILE_HEIGHT_HALF
+    @tilemap.ox = ($game_map.display_x - $game_map.display_y) * TILE_WIDTH_HALF + (@parallax.bitmap.width / 2) - (Graphics.width / 2)
+    @tilemap.oy = ($game_map.display_x + $game_map.display_y) * TILE_HEIGHT_HALF
     @tilemap.update
   end
 
@@ -280,6 +270,8 @@ class Game_Map
   def set_display_pos(x, y)
     x = [x, width * NUMBER_OF_32PX_TILES_FOR_ONE_ISOMETRIC_TILE_WIDTH - screen_tile_x].min
     y = [y, height * NUMBER_OF_32PX_TILES_FOR_ONE_ISOMETRIC_TILE_WIDTH - screen_tile_y].min
+    @display_x = (x + width * NUMBER_OF_32PX_TILES_FOR_ONE_ISOMETRIC_TILE_WIDTH) % width
+    @display_y = (y + height * NUMBER_OF_32PX_TILES_FOR_ONE_ISOMETRIC_TILE_WIDTH) % height
     @parallax_x = x
     @parallax_y = y
   end
@@ -358,8 +350,8 @@ class Game_Map
   end
 
   def map_tile_adjust_xy(x, y)
-    parallax_bitmap = Cache.parallax(@parallax_name)
-    map_data_offset_x_to_adjust_map_origin = (parallax_bitmap.width / TILE_WIDTH_HALF) / 2 - TILE_OFFSET_X_IN_MAP_DATA
+    nombreDeTuilesDe32PxSurAxeX =  self.data.xsize
+    map_data_offset_x_to_adjust_map_origin = nombreDeTuilesDe32PxSurAxeX / 2 - TILE_OFFSET_X_IN_MAP_DATA
 
     tile_x = (2 * (x - y)) + map_data_offset_x_to_adjust_map_origin
     tile_y = (x + y) + MAP_DATA_OFFSET_Y_TO_ADJUST_MAP_ORIGIN
@@ -506,13 +498,4 @@ class Game_Event
     ay = ($game_map.adjust_x(@real_x) + $game_map.adjust_y(@real_y)) - Graphics.height / 2 / TILE_HEIGHT
     ax >= -dx && ax <= dx && ay >= -dy && ay <= dy
   end
-end
-
-
-class Tilemap
-
-  def update
-    
-  end
-
 end
