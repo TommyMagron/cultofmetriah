@@ -499,3 +499,13 @@ class Game_Event
     ax >= -dx && ax <= dx && ay >= -dy && ay <= dy
   end
 end
+
+class Game_Interpreter
+  #--------------------------------------------------------------------------
+  # * Change Map Name Display
+  #--------------------------------------------------------------------------
+  def command_281
+    $game_map.name_display = (@params[0] == 0)
+    SceneManager.scene.instance_variable_get(:@map_name_window).open
+  end
+end
